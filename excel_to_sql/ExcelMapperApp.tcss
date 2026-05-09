@@ -1,0 +1,367 @@
+/* =============================================================
+   Shared
+   ============================================================= */
+
+Screen {
+    background: $surface;
+}
+
+Button {
+    margin: 0 1;
+}
+
+/* =============================================================
+   PathInputModal
+   ============================================================= */
+
+PathInputModal {
+    align: center middle;
+}
+
+#modal-container {
+    background: $panel;
+    border: solid $accent;
+    padding: 1 2;
+    max-width: 60;
+    min-width: 40;
+    height: auto;
+}
+
+#modal-buttons {
+    align-horizontal: right;
+    height: auto;
+    margin-top: 1;
+}
+
+/* =============================================================
+   FilePickerModal
+   ============================================================= */
+
+FilePickerModal {
+    align: center middle;
+}
+
+#filepicker-container {
+    background: $panel;
+    border: solid $accent;
+    padding: 1 2;
+    width: 80%;
+    max-width: 100;
+    height: 80%;
+}
+
+#filepicker-tree {
+    height: 1fr;
+    border: solid $panel-lighten-1;
+    margin-bottom: 1;
+}
+
+#filepicker-buttons {
+    align-horizontal: right;
+    height: auto;
+    margin-top: 1;
+}
+
+/* =============================================================
+   FileScreen
+   ============================================================= */
+
+FileScreen {
+    align: center middle;
+}
+
+#file-screen-content {
+    max-width: 80;
+    width: 100%;
+    padding: 2 3;
+    background: $panel;
+    border: solid $panel-lighten-1;
+    height: auto;
+}
+
+FileScreen Label {
+    margin-top: 1;
+    color: $text-muted;
+}
+
+.hint-label {
+    color: $text-disabled;
+    margin-top: 0;
+}
+
+.file-picker-row {
+    height: auto;
+    margin-top: 0;
+    margin-bottom: 1;
+}
+
+.file-picker-row Input {
+    width: 1fr;
+}
+
+.file-picker-row Button {
+    width: auto;
+}
+
+#file-buttons {
+    margin-top: 2;
+    height: auto;
+    align-horizontal: right;
+}
+
+#btn-exit {
+    margin-right: 1;
+}
+
+/* =============================================================
+   SheetTableScreen
+   ============================================================= */
+
+SheetTableScreen {
+    align: center top;
+}
+
+#sheet-screen-content {
+    max-width: 80;
+    width: 100%;
+    padding: 1 2;
+}
+
+SheetTableScreen Label {
+    margin-top: 1;
+    color: $text-muted;
+}
+
+#sheet-radioset {
+    height: auto;
+    margin-bottom: 1;
+    background: $panel;
+    border: solid $panel-lighten-1;
+    padding: 0 1;
+}
+
+#table-radioset {
+    height: auto;
+    margin-bottom: 1;
+    background: $panel;
+    border: solid $panel-lighten-1;
+    padding: 0 1;
+}
+
+.form-row {
+    height: auto;
+    margin-bottom: 1;
+    align-vertical: middle;
+}
+
+.form-row Label {
+    width: 20;
+    margin-top: 0;
+}
+
+.form-row Input {
+    width: 1fr;
+}
+
+#sheet-buttons {
+    margin-top: 1;
+    height: auto;
+    align-horizontal: right;
+}
+
+/* =============================================================
+   MappingScreen
+   ============================================================= */
+
+MappingScreen {
+    layout: vertical;
+}
+
+#mapping-screen {
+    height: 1fr;
+    layout: vertical;
+}
+
+#excel-panel {
+    height: auto;
+    border-bottom: solid $panel-lighten-1;
+    padding: 0 1;
+}
+
+#excel-panel Label {
+    color: $text-muted;
+}
+
+#excel-panel DataTable {
+    height: 9;
+}
+
+#db-panel {
+    height: 1fr;
+    layout: vertical;
+    padding: 0 1;
+}
+
+#db-panel > Label {
+    color: $text-muted;
+    margin-bottom: 0;
+}
+
+#card-scroll {
+    height: auto;
+    overflow-x: auto;
+    border: solid $panel-lighten-2;
+    padding: 0;
+}
+
+.column-card {
+    border-right: solid $panel-lighten-2;
+    background: $panel;
+    padding: 0;
+    margin: 0;
+    height: auto;
+}
+
+.column-card Input {
+    height: 2;
+    border: none;
+    border-bottom: solid $panel-lighten-2;
+    padding: 0 1;
+    background: $panel-lighten-1;
+    margin: 0;
+}
+
+.column-card Select {
+    border: none;
+    border-bottom: solid $panel-lighten-2;
+    padding: 0;
+    margin: 0;
+    color: $text;
+}
+
+.column-card Checkbox {
+    border: none;
+    border-bottom: solid $panel-lighten-2;
+    padding: 0 1;
+    margin: 0;
+    background: $panel;
+}
+
+.delete-btn {
+    height: 1;
+    width: 100%;
+    border: none;
+    padding: 0 1;
+    margin: 0;
+    background: $error 15%;
+    color: $error;
+}
+
+.add-col-btn {
+    width: auto;
+    margin: 0 2;
+}
+
+#mapping-buttons {
+    height: auto;
+    align-horizontal: right;
+    padding: 0;
+    border-top: solid $panel-lighten-1;
+}
+
+#mapping-buttons Button {
+    height: 1;
+    border: none;
+    padding: 0 1;
+    margin: 0 1;
+    background: $panel-lighten-2;
+}
+
+#mapping-buttons Button.-primary {
+    background: $accent;
+    color: $text;
+}
+
+/* =============================================================
+   ImportOptionsScreen
+   ============================================================= */
+
+ImportOptionsScreen {
+    align: center middle;
+}
+
+#import-options-content {
+    max-width: 70;
+    width: 100%;
+    padding: 2 3;
+    background: $panel;
+    border: solid $panel-lighten-1;
+    height: auto;
+}
+
+#import-options-content Label {
+    margin-top: 1;
+    color: $text-muted;
+}
+
+#import-mode {
+    height: auto;
+    margin: 1 0;
+}
+
+#join-col-label {
+    margin-top: 1;
+}
+
+#join-col-select {
+    margin-bottom: 1;
+}
+
+#import-buttons {
+    margin-top: 2;
+    height: auto;
+    align-horizontal: right;
+}
+
+/* =============================================================
+   PreviewScreen / DBPreviewScreen  (shared layout)
+   ============================================================= */
+
+PreviewScreen, DBPreviewScreen {
+    layout: vertical;
+}
+
+#db-preview-title {
+    background: $panel;
+    color: $text-muted;
+    padding: 0 1;
+    height: 1;
+}
+
+#search-bar {
+    height: auto;
+    background: $panel;
+    padding: 0 1;
+}
+
+#search-bar Input {
+    width: 1fr;
+    min-width: 8;
+}
+
+#preview-table {
+    height: 1fr;
+}
+
+#bottom-bar {
+    height: auto;
+    background: $panel;
+    padding: 0 1;
+    align-vertical: middle;
+}
+
+#row-count {
+    width: 1fr;
+    color: $text-muted;
+    padding: 0 1;
+}

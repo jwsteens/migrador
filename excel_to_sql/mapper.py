@@ -7,7 +7,13 @@ from .helpers import build_col_map, col_letter_to_index, col_letters
 
 class ExcelMapper:
 
-    def __init__(self, filepath: str, header_row: int = 1, start_col: str = "A"):
+    def __init__(
+        self,
+        filepath: str,
+        header_row: int = 1,
+        start_col: str = "A",
+        sheet_name: str | int = 0,
+    ):
         """
         Load an Excel (.xlsx, .xls) or CSV file into a DataFrame.
 
@@ -15,8 +21,7 @@ class ExcelMapper:
             filepath:   Path to the source file.
             header_row: 1-indexed row number of the header (0 = no header).
             start_col:  Excel-style column letter where the table begins.
-                        "A" = read from the first column (default).
-                        "B" = skip the first column, etc.
+            sheet_name: Sheet name or 0-based index (Excel only; ignored for CSV).
         """
         self.filepath = filepath
         self.start_col_index = col_letter_to_index(start_col.upper())
@@ -25,10 +30,8 @@ class ExcelMapper:
 
         if ext in ("xlsx", "xls"):
             self.df = pd.read_excel(
-                filepath,
-                header=pandas_header,
-                usecols=lambda i: i >= self.start_col_index,
-            )
+                filepath, header=pandas_header, sheet_name=sheet_name
+            ).iloc[:, self.start_col_index:]
         elif ext == "csv":
             df = pd.read_csv(filepath, header=pandas_header)
             self.df = df.iloc[:, self.start_col_index:]

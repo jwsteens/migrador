@@ -124,12 +124,20 @@ def preview_table(records: list[dict]) -> None:
 
 
 def load_mapping(path: str) -> dict:
-    """Read a mapping JSON file and validate required keys."""
+    """Read a mapping JSON file. Accepts both TUI format (list columns) and CLI format (dict columns)."""
     with open(path, "r", encoding="utf-8") as f:
         mapping = json.load(f)
-    required_keys = {"header_row", "start_col", "target_table", "columns", "renames"}
-    missing = required_keys - mapping.keys()
-    if missing:
+    new_keys = {"sheet_name", "header_row", "start_col", "target_table", "columns"}
+    old_keys = {"header_row", "start_col", "target_table", "columns", "renames"}
+    if new_keys.issubset(mapping.keys()):
+        if not isinstance(mapping["columns"], list):
+            raise ValueError(
+                f"Mapping file '{path}': 'columns' must be a list of {{name, source, type}} dicts"
+            )
+    elif old_keys.issubset(mapping.keys()):
+        pass  # CLI format, accepted as-is
+    else:
+        missing = new_keys - mapping.keys()
         raise ValueError(
             f"Mapping file '{path}' is missing required keys: {sorted(missing)}"
         )
