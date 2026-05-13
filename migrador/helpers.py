@@ -123,28 +123,28 @@ def preview_table(records: list[dict]) -> None:
     console.print(table)
 
 
-def load_mapping(path: str) -> dict:
-    """Read a mapping JSON file. Accepts both TUI format (list columns) and CLI format (dict columns)."""
+def load_migration(path: str) -> dict:
+    """Read a migration JSON file. Accepts both TUI format (list columns) and CLI format (dict columns)."""
     with open(path, "r", encoding="utf-8") as f:
-        mapping = json.load(f)
+        migration = json.load(f)
     new_keys = {"sheet_name", "header_row", "start_col", "target_table", "columns"}
     old_keys = {"header_row", "start_col", "target_table", "columns", "renames"}
-    if new_keys.issubset(mapping.keys()):
-        if not isinstance(mapping["columns"], list):
+    if new_keys.issubset(migration.keys()):
+        if not isinstance(migration["columns"], list):
             raise ValueError(
-                f"Mapping file '{path}': 'columns' must be a list of {{name, source, type}} dicts"
+                f"Migration file '{path}': 'columns' must be a list of {{name, source, type}} dicts"
             )
-    elif old_keys.issubset(mapping.keys()):
+    elif old_keys.issubset(migration.keys()):
         pass  # CLI format, accepted as-is
     else:
-        missing = new_keys - mapping.keys()
+        missing = new_keys - migration.keys()
         raise ValueError(
-            f"Mapping file '{path}' is missing required keys: {sorted(missing)}"
+            f"Migration file '{path}' is missing required keys: {sorted(missing)}"
         )
-    return mapping
+    return migration
 
 
-def save_mapping(path: str, mapping: dict) -> None:
-    """Write a mapping dict to a JSON file with indent=2."""
+def save_migration(path: str, migration: dict) -> None:
+    """Write a migration dict to a JSON file with indent=2."""
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(mapping, f, indent=2)
+        json.dump(migration, f, indent=2)

@@ -12,8 +12,8 @@ from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual import work
 from rich.text import Text
 
-from .mapper import ExcelMapper
-from .helpers import build_col_map, col_letters, load_mapping, save_mapping
+from .migrator import ExcelMigrator
+from .helpers import build_col_map, col_letters, load_migration, save_migration
 
 
 # ─────────────────────────────────────────────────────────────
@@ -157,12 +157,12 @@ class FileScreen(Screen):
             with Horizontal(id="file-buttons"):
                 yield Button("Exit", id="btn-exit", variant="error")
                 yield Button(
-                    "Load mapping from JSON",
+                    "Load migration from JSON",
                     id="btn-load-mapping",
                     variant="primary",
                 )
                 yield Button(
-                    "Create mapping",
+                    "Create migration",
                     id="btn-create-mapping",
                     variant="primary",
                 )
@@ -174,9 +174,9 @@ class FileScreen(Screen):
         elif bid == "btn-browse-db":
             self._browse("db")
         elif bid == "btn-load-mapping":
-            self._load_mapping_flow()
+            self._load_migration_flow()
         elif bid == "btn-create-mapping":
-            self._create_mapping_flow()
+            self._create_migration_flow()
         elif bid == "btn-exit":
             self.app.exit()
 
@@ -201,7 +201,7 @@ class FileScreen(Screen):
             return None
         return excel_path, db_path
 
-    def _load_mapping_flow(self) -> None:
+    def _load_migration_flow(self) -> None:
         paths = self._validate_paths()
         if not paths:
             return
@@ -213,22 +213,22 @@ class FileScreen(Screen):
             if not json_path:
                 return
             try:
-                m = load_mapping(json_path)
-                self.app.loaded_mapping = m
+                m = load_migration(json_path)
+                self.app.loaded_migration = m
                 self.app.push_screen(SheetTableScreen())
             except Exception as e:
                 self.app.notify(str(e), severity="error")
 
-        self.app.push_screen(FilePickerModal("Load mapping JSON"), _on_json_path)
+        self.app.push_screen(FilePickerModal("Load migration JSON"), _on_json_path)
 
-    def _create_mapping_flow(self) -> None:
+    def _create_migration_flow(self) -> None:
         paths = self._validate_paths()
         if not paths:
             return
         excel_path, db_path = paths
         self.app.excel_path = excel_path
         self.app.db_path = db_path
-        self.app.loaded_mapping = None
+        self.app.loaded_migration = None
         self.app.push_screen(SheetTableScreen())
 
 
@@ -297,8 +297,8 @@ class SheetTableScreen(Screen):
         self._db_tables = db_tables
         self._populate_radiosets()
 
-        if self.app.loaded_mapping:
-            self._prefill_from_mapping(self.app.loaded_mapping)
+        if self.app.loaded_migration:
+            self._prefill_from_migration(self.app.loaded_migration)
 
     def _populate_radiosets(self) -> None:
         sheet_rs = self.query_one("#sheet-radioset", RadioSet)
@@ -313,7 +313,7 @@ class SheetTableScreen(Screen):
         for name in self._db_tables:
             table_rs.mount(RadioButton(str(name)))
 
-    def _prefill_from_mapping(self, m: dict) -> None:
+    def _prefill_from_migration(self, m: dict) -> None:
         sheet_name = str(m.get("sheet_name", ""))
         if sheet_name in [str(s) for s in self._sheet_names]:
             idx = [str(s) for s in self._sheet_names].index(sheet_name)
@@ -371,8 +371,8 @@ class SheetTableScreen(Screen):
             return
 
         try:
-            mapper = await asyncio.to_thread(
-                ExcelMapper, self.app.excel_path, header_row, start_col, sheet_name
+            migrator = await asyncio.to_thread(
+                ExcelMigrator, self.app.excel_path, header_row, start_col, sheet_name
             )
         except Exception as e:
             self.app.notify(str(e), severity="error")
@@ -397,18 +397,18 @@ class SheetTableScreen(Screen):
             self.app.notify(str(e), severity="error")
             return
 
-        self.app.mapper = mapper
+        self.app.migrator = migrator
         self.app.conn = conn
         self.app.sheet_name = sheet_name
         self.app.header_row = header_row
         self.app.start_col = start_col
         self.app.target_table = target_table
         self.app.existing_table_cols = existing_cols
-        self.app.push_screen(MappingScreen())
+        self.app.push_screen(MigrationScreen())
 
 
 # ─────────────────────────────────────────────────────────────
-# Screen 3: MappingScreen — column card widget
+# Screen 3: MigrationScreen — column card widget
 # ─────────────────────────────────────────────────────────────
 
 _SQL_TYPES = [("TEXT", "TEXT"), ("INTEGER", "INTEGER"), ("REAL", "REAL"), ("BLOB", "BLOB"), ("NUMERIC", "NUMERIC")]
@@ -471,10 +471,10 @@ class ColumnCard(Vertical):
 
 
 # ─────────────────────────────────────────────────────────────
-# Screen 3: MappingScreen
+# Screen 3: MigrationScreen
 # ─────────────────────────────────────────────────────────────
 
-class MappingScreen(Screen):
+class MigrationScreen(Screen):
     def __init__(self) -> None:
         super().__init__()
         self._next_card_index: int = 0
@@ -483,7 +483,7 @@ class MappingScreen(Screen):
     def _excel_options(self) -> list[tuple[str, str]]:
         return [
             (f"{letter}  {name}", letter)
-            for letter, name in self.app.mapper.columns()
+            for letter, name in self.app.migrator.columns()
         ] + [("(skip)", "skip")]
 
     def _card_width(self) -> int:
@@ -493,11 +493,11 @@ class MappingScreen(Screen):
 
     def _initial_cards(self) -> list[tuple[str, str, str, bool]]:
         opts_values = {val for _, val in self._excel_options()}
-        if self.app.loaded_mapping and isinstance(
-            self.app.loaded_mapping.get("columns"), list
+        if self.app.loaded_migration and isinstance(
+            self.app.loaded_migration.get("columns"), list
         ):
             result = []
-            for entry in self.app.loaded_mapping["columns"]:
+            for entry in self.app.loaded_migration["columns"]:
                 src = entry.get("source", "skip")
                 if src not in opts_values:
                     src = "skip"
@@ -518,7 +518,7 @@ class MappingScreen(Screen):
     def compose(self) -> ComposeResult:
         opts = self._excel_options()
         w = self._card_width()
-        with Vertical(id="mapping-screen"):
+        with Vertical(id="migration-screen"):
             with Vertical(id="excel-panel"):
                 yield Label("Excel columns  (reference)")
                 yield DataTable(id="excel-col-table")
@@ -531,15 +531,15 @@ class MappingScreen(Screen):
                         self._next_card_index += 1
                         yield ColumnCard(idx, col_name, source, col_type, unique, opts, w)
                     yield Button("+ Add column", id="btn-add-col", classes="add-col-btn")
-                with Horizontal(id="mapping-buttons"):
+                with Horizontal(id="migration-buttons"):
                     yield Button("Back", id="btn-back")
-                    yield Button("Save mapping to JSON", id="btn-save-mapping")
+                    yield Button("Save migration to JSON", id="btn-save-migration")
                     yield Button("Preview", variant="primary", id="btn-preview")
 
     def on_mount(self) -> None:
         table = self.query_one("#excel-col-table", DataTable)
-        df = self.app.mapper.df
-        col_pairs = self.app.mapper.columns()   # [(letter, col_name), ...]
+        df = self.app.migrator.df
+        col_pairs = self.app.migrator.columns()   # [(letter, col_name), ...]
 
         # First column = row number; remaining = Excel letter labels
         table.add_column("", key="_row")
@@ -567,8 +567,8 @@ class MappingScreen(Screen):
             self._add_card()
         elif bid == "btn-preview":
             self._go_preview()
-        elif bid == "btn-save-mapping":
-            self._save_mapping_dialog()
+        elif bid == "btn-save-migration":
+            self._save_migration_dialog()
         elif bid and bid.startswith("card-delete-"):
             try:
                 idx = int(bid.split("-")[-1])
@@ -592,7 +592,7 @@ class MappingScreen(Screen):
         except Exception:
             pass
 
-    def get_current_mapping(self) -> dict:
+    def get_current_migration(self) -> dict:
         columns = []
         for idx in self._card_indices:
             try:
@@ -622,34 +622,34 @@ class MappingScreen(Screen):
         }
 
     def _go_preview(self) -> None:
-        mapping = self.get_current_mapping()
+        migration = self.get_current_migration()
         col_map = {
             entry["source"]: entry["name"]
-            for entry in mapping["columns"]
+            for entry in migration["columns"]
             if entry["source"] != "skip" and entry["name"]
         }
         if not col_map:
-            self.app.notify("Map at least one column.", severity="warning")
+            self.app.notify("Migrate at least one column.", severity="warning")
             return
         try:
-            df = self.app.mapper.map(col_map)
+            df = self.app.migrator.migrate(col_map)
         except ValueError as e:
             self.app.notify(str(e), severity="error")
             return
-        self.app.current_mapping = mapping
+        self.app.current_migration = migration
         self.app.push_screen(PreviewScreen(df, self.app.conn, self.app.target_table))
 
-    def _save_mapping_dialog(self) -> None:
+    def _save_migration_dialog(self) -> None:
         def _on_dismiss(path: str | None) -> None:
             if not path:
                 return
             try:
-                save_mapping(path, self.get_current_mapping())
-                self.app.notify(f"Mapping saved to {path}")
+                save_migration(path, self.get_current_migration())
+                self.app.notify(f"Migration saved to {path}")
             except Exception as e:
                 self.app.notify(str(e), severity="error")
 
-        self.app.push_screen(FilePickerModal("Save mapping JSON"), _on_dismiss)
+        self.app.push_screen(FilePickerModal("Save migration JSON"), _on_dismiss)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -675,7 +675,7 @@ class PreviewScreen(Screen):
         with Horizontal(id="bottom-bar"):
             yield Static("", id="row-count")
             yield Button("Back", id="btn-back")
-            yield Button("Save mapping to JSON", id="btn-save-mapping")
+            yield Button("Save migration to JSON", id="btn-save-migration")
             yield Button("Next", variant="primary", id="btn-next")
 
     def on_mount(self) -> None:
@@ -737,27 +737,27 @@ class PreviewScreen(Screen):
             self.app.push_screen(
                 ImportOptionsScreen(self._df, self._conn, self._table)
             )
-        elif event.button.id == "btn-save-mapping":
-            self._save_mapping_dialog()
+        elif event.button.id == "btn-save-migration":
+            self._save_migration_dialog()
 
-    def _save_mapping_dialog(self) -> None:
-        if not isinstance(self.app, ExcelMapperApp):
+    def _save_migration_dialog(self) -> None:
+        if not isinstance(self.app, ExcelMigratorApp):
             return
-        mapping = getattr(self.app, "current_mapping", None)
-        if not mapping:
-            self.app.notify("No mapping available to save.", severity="warning")
+        migration = getattr(self.app, "current_migration", None)
+        if not migration:
+            self.app.notify("No migration available to save.", severity="warning")
             return
 
         def _on_dismiss(path: str | None) -> None:
             if not path:
                 return
             try:
-                save_mapping(path, mapping)
-                self.app.notify(f"Mapping saved to {path}")
+                save_migration(path, migration)
+                self.app.notify(f"Migration saved to {path}")
             except Exception as e:
                 self.app.notify(str(e), severity="error")
 
-        self.app.push_screen(FilePickerModal("Save mapping JSON"), _on_dismiss)
+        self.app.push_screen(FilePickerModal("Save migration JSON"), _on_dismiss)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -931,19 +931,19 @@ class DBPreviewScreen(Screen):
 
 
 # ─────────────────────────────────────────────────────────────
-# ExcelMapperApp
+# ExcelMigratorApp
 # ─────────────────────────────────────────────────────────────
 
-class ExcelMapperApp(App):
+class ExcelMigratorApp(App):
     SCREENS = {
         "file": FileScreen,
         "sheet": SheetTableScreen,
-        "mapping": MappingScreen,
+        "migration": MigrationScreen,
         "preview": PreviewScreen,
         "import": ImportOptionsScreen,
         "db-preview": DBPreviewScreen,
     }
-    CSS_PATH = "ExcelMapperApp.tcss"
+    CSS_PATH = "ExcelMigratorApp.tcss"
 
     def __init__(self) -> None:
         super().__init__()
@@ -953,10 +953,10 @@ class ExcelMapperApp(App):
         self.header_row: int = 1
         self.start_col: str = "A"
         self.target_table: str = ""
-        self.mapper: ExcelMapper | None = None
+        self.migrator: ExcelMigrator | None = None
         self.conn: sqlite3.Connection | None = None
-        self.loaded_mapping: dict | None = None
-        self.current_mapping: dict | None = None
+        self.loaded_migration: dict | None = None
+        self.current_migration: dict | None = None
         self.existing_table_cols: list[tuple[str, str]] = []
 
     def on_mount(self) -> None:
@@ -972,7 +972,7 @@ class ExcelMapperApp(App):
 # ─────────────────────────────────────────────────────────────
 
 class ExcelPreviewApp(App):
-    CSS_PATH = "ExcelMapperApp.tcss"
+    CSS_PATH = "ExcelMigratorApp.tcss"
 
     def __init__(self, df: pd.DataFrame, conn: sqlite3.Connection, table: str) -> None:
         super().__init__()

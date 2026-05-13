@@ -5,7 +5,7 @@ import pandas as pd
 from .helpers import build_col_map, col_letter_to_index, col_letters
 
 
-class ExcelMapper:
+class ExcelMigrator:
 
     def __init__(
         self,
@@ -48,15 +48,15 @@ class ExcelMapper:
         letters = col_letters(len(self.df.columns))
         return list(zip(letters, self.df.columns))
 
-    def map(self, mapping: dict[str, str]) -> pd.DataFrame:
+    def migrate(self, migration: dict[str, str]) -> pd.DataFrame:
         """
-        Apply a column mapping to the DataFrame.
+        Apply a column migration to the DataFrame.
 
         Args:
-            mapping: {excel_col_letter_or_name: target_sql_column_name}
+            migration: {excel_col_letter_or_name: target_sql_column_name}
 
         Returns:
-            New DataFrame with only the mapped columns, renamed to target names.
+            New DataFrame with only the migrated columns, renamed to target names.
 
         Raises:
             ValueError if any source column letter or name is not found.
@@ -64,7 +64,7 @@ class ExcelMapper:
         col_map = build_col_map(self.df)
         selected = []
         rename = {}
-        for source, target in mapping.items():
+        for source, target in migration.items():
             key = col_map.get(source.upper()) or col_map.get(source)
             if key is None or key not in self.df.columns:
                 raise ValueError(
@@ -75,22 +75,22 @@ class ExcelMapper:
             rename[key] = target
         return self.df[selected].rename(columns=rename)
 
-    def preview(self, mapping: dict[str, str], n: int = 5) -> list[dict]:
-        """Return the first n rows of the mapped DataFrame as a list of dicts."""
-        return self.map(mapping).head(n).to_dict(orient="records")
+    def preview(self, migration: dict[str, str], n: int = 5) -> list[dict]:
+        """Return the first n rows of the migrated DataFrame as a list of dicts."""
+        return self.migrate(migration).head(n).to_dict(orient="records")
 
     def to_sqlite(
         self,
-        mapping: dict[str, str],
+        migration: dict[str, str],
         conn: sqlite3.Connection,
         table: str,
         if_exists: str = "append",
     ) -> int:
         """
-        Write the mapped DataFrame to a SQLite table.
+        Write the migrated DataFrame to a SQLite table.
 
         Args:
-            mapping:   Column mapping dict (same format as map()).
+            migration: Column migration dict (same format as migrate()).
             conn:      Open sqlite3 connection.
             table:     Target table name.
             if_exists: "append", "replace", or "fail".
@@ -98,6 +98,6 @@ class ExcelMapper:
         Returns:
             Number of rows written.
         """
-        df = self.map(mapping)
+        df = self.migrate(migration)
         df.to_sql(table, conn, if_exists=if_exists, index=False)
         return len(df)

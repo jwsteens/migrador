@@ -1,24 +1,45 @@
-# excel_to_sql
+# migrador
 
-Standalone Python package for interactively mapping Excel/CSV columns
-to a SQLite table, with a CLI and Textual TUI.
+Migrate Excel/CSV data into a SQLite table — interactively via a TUI, or in one command.
 
 ## Usage
 
-### As a library
-    from excel_to_sql import ExcelMapper
-    import sqlite3
-
-    mapper = ExcelMapper("data.xlsx", header_row=1, start_col="A")
-    print(mapper.columns())
-    conn = sqlite3.connect("mydb.db")
-    rows = mapper.to_sqlite({"A": "tag", "B": "description"}, conn, "my_table")
-
-### CLI
-    python -m excel_to_sql.cli map-excel
-
 ### TUI
-    python -m excel_to_sql.cli map-excel --tui
 
-## Installation
-    pip install -r requirements.txt
+Launch without arguments to open the interactive TUI:
+
+```
+migrador
+```
+
+Use the TUI to configure your migration and optionally save it as a JSON config file for later reuse.
+
+### One-liner
+
+Run a saved migration config non-interactively:
+
+```
+migrador --input data.xlsx --database mydb.db --config migration.json --mode append
+```
+
+**Options**
+
+| Option | Description |
+|---|---|
+| `--input` | Path to the Excel or CSV file |
+| `--database` | Path to the SQLite database |
+| `--config` | Path to the migration JSON (created via the TUI) |
+| `--mode` | `append`, `replace`, or `upsert` |
+| `--join-col` | Column to upsert on (required when `--mode=upsert`) |
+
+### As a library
+
+```python
+from migrador import ExcelMigrator
+import sqlite3
+
+migrator = ExcelMigrator("data.xlsx", header_row=1, start_col="A")
+print(migrator.columns())
+conn = sqlite3.connect("mydb.db")
+rows = migrator.to_sqlite({"A": "tag", "B": "description"}, conn, "my_table")
+```

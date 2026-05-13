@@ -1,0 +1,38 @@
+{
+  "sheet_name": "STANDARD VALVE LIST",
+  "header_row": 1,
+  "start_col": "A",
+  "target_table": "valves",
+  "columns": [
+    {
+      "name": "tag",
+      "source": "B",
+      "type": "TEXT",
+      "unique": false
+    },
+    {
+      "name": "document",
+      "source": "R",
+      "type": "TEXT",
+      "unique": false
+    },
+    {
+      "name": "room",
+      "source": "U",
+      "type": "TEXT",
+      "unique": false
+    },
+    {
+      "name": "description",
+      "source": "P",
+      "type": "TEXT",
+      "unique": false
+    },
+    {
+      "name": "",
+      "source": "C",
+      "type": "TEXT",
+      "unique": false
+    }
+  ]
+}
