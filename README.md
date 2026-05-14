@@ -11,10 +11,10 @@ Launch without arguments to open the interactive TUI:
 ```
 migrador
 ```
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/82547bc4-b31e-4e35-aac7-2f2ccb97d24a" />
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/8e7671aa-a107-4a54-8b4a-0ac2b36f3381" />
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/e6154733-3029-44e1-bca1-54f93137f735" />
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/e4b18f03-cf04-49ac-a06a-e0a04b3ff47e" />
+<img alt="image" src="https://github.com/user-attachments/assets/82547bc4-b31e-4e35-aac7-2f2ccb97d24a" />
+<img alt="image" src="https://github.com/user-attachments/assets/8e7671aa-a107-4a54-8b4a-0ac2b36f3381" />
+<img alt="image" src="https://github.com/user-attachments/assets/e6154733-3029-44e1-bca1-54f93137f735" />
+<img alt="image" src="https://github.com/user-attachments/assets/e4b18f03-cf04-49ac-a06a-e0a04b3ff47e" />
 
 Use the TUI to configure your migration and optionally save it as a JSON config file for later reuse.
 

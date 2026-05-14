@@ -2,6 +2,7 @@ import asyncio
 import sqlite3
 
 import pandas as pd
+from importlib.resources import files
 from textual.app import App, ComposeResult
 from textual.screen import Screen, ModalScreen
 from textual.widgets import (
@@ -828,7 +829,11 @@ class ImportOptionsScreen(Screen):
                 if join_col is Select.NULL:
                     self.app.notify("Select a join column.", severity="warning")
                     return
-                await asyncio.to_thread(self._upsert, str(join_col))
+                join_col = str(join_col)
+                await asyncio.to_thread(self._ensure_table_and_index, join_col)
+                await asyncio.to_thread(self._upsert, join_col)
+
+            await asyncio.to_thread(self._apply_unique_constraints)
 
             if isinstance(self.app, ExcelPreviewApp):
                 self.app.confirmed = True
@@ -836,6 +841,29 @@ class ImportOptionsScreen(Screen):
             self.app.push_screen(DBPreviewScreen(self._conn, self._table))
         except Exception as e:
             self.app.notify(str(e), severity="error")
+
+    def _ensure_table_and_index(self, join_col: str) -> None:
+        self._df.iloc[:0].to_sql(self._table, self._conn, if_exists="append", index=False)
+        index_name = f"uq_{self._table}_{join_col}"
+        self._conn.execute(
+            f'CREATE UNIQUE INDEX IF NOT EXISTS "{index_name}" '
+            f'ON "{self._table}" ("{join_col}")'
+        )
+        self._conn.commit()
+
+    def _apply_unique_constraints(self) -> None:
+        migration = getattr(self.app, "current_migration", None)
+        if not migration:
+            return
+        for col in migration.get("columns", []):
+            if col.get("unique") and col.get("name") and col.get("source") != "skip":
+                col_name = col["name"]
+                index_name = f"uq_{self._table}_{col_name}"
+                self._conn.execute(
+                    f'CREATE UNIQUE INDEX IF NOT EXISTS "{index_name}" '
+                    f'ON "{self._table}" ("{col_name}")'
+                )
+        self._conn.commit()
 
     def _upsert(self, join_col: str) -> None:
         cols = self._columns
@@ -943,8 +971,7 @@ class ExcelMigratorApp(App):
         "import": ImportOptionsScreen,
         "db-preview": DBPreviewScreen,
     }
-    CSS_PATH = "ExcelMigratorApp.tcss"
-
+    CSS_PATH = str(files("migrador").joinpath("ExcelMigratorApp.tcss"))
     def __init__(self) -> None:
         super().__init__()
         self.excel_path: str = ""

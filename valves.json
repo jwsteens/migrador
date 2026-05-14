@@ -8,7 +8,7 @@
       "name": "tag",
       "source": "B",
       "type": "TEXT",
-      "unique": false
+      "unique": true
     },
     {
       "name": "document",
@@ -19,18 +19,12 @@
     {
       "name": "room",
       "source": "U",
-      "type": "TEXT",
+      "type": "INTEGER",
       "unique": false
     },
     {
       "name": "description",
       "source": "P",
-      "type": "TEXT",
-      "unique": false
-    },
-    {
-      "name": "",
-      "source": "C",
       "type": "TEXT",
       "unique": false
     }
